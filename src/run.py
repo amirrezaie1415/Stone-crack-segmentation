@@ -56,14 +56,20 @@ def main(config):
     train_loader = get_loader(image_path=config.train_path, image_size=config.image_size, batch_size=config.batch_size,
                               num_workers=config.num_workers, mode='train', augmentation_prob=config.augmentation_prob,
                               shuffle_flag=True, pretrained=bool(config.pretrained))
+    print("image count in {} path :{}".format('number of training data:', len(train_loader.dataset)))
+
     # Load validation data
     valid_loader = get_loader(image_path=config.valid_path, image_size=config.image_size, batch_size=config.batch_size,
                               num_workers=config.num_workers, mode='valid',
                               augmentation_prob=0., shuffle_flag=False, pretrained=bool(config.pretrained))
+    print("image count in {} path :{}".format('number of validation data:', len(valid_loader.dataset)))
+
     # Load test data
     test_loader = get_loader(image_path=config.test_path, image_size=config.image_size, batch_size=1,
                              num_workers=0, mode='valid', augmentation_prob=0., shuffle_flag=False,
                              pretrained=bool(config.pretrained))
+    print("image count in {} path :{}".format('number of test data:', len(test_loader.dataset)))
+
 
     # Define a solver instance
     solver = Solver(config, train_loader, valid_loader, test_loader)
@@ -78,7 +84,7 @@ if __name__ == '__main__':
     parser.add_argument('--output_ch', type=int, default=1, help='number of channels of the output data')
     parser.add_argument('--pretrained', type=int, default=1, help='to use pre-trained weights input must be 1')
     parser.add_argument('--num_epochs', type=int, default=100, help='number epochs for training')
-    parser.add_argument('--batch_size', type=int, default=1)
+    parser.add_argument('--batch_size', type=int, default=8)
     parser.add_argument('--num_workers', type=int, default=0)
     parser.add_argument('--lr', type=float, default=0.00005, help='learning rate')
     parser.add_argument('--beta1', type=float, default=0.9, help=' momentum1 in the Adam optimizer')
@@ -89,9 +95,9 @@ if __name__ == '__main__':
     parser.add_argument('--number_layers_freeze', type=int, default=0)
     parser.add_argument('--model_type', type=str, default='TernausNet16', help='TernausNet16')
     parser.add_argument('--model_path', type=str, default='../models', help='path to save the best model')
-    parser.add_argument('--train_path', type=str, default='../dataset/DIC_crack_dataset/train/', help='path to training images')
-    parser.add_argument('--valid_path', type=str, default='../dataset/DIC_crack_dataset/valid/', help='path to validation images')
-    parser.add_argument('--test_path', type=str, default='../dataset/DIC_crack_dataset/test/', help='path to test images')
+    parser.add_argument('--train_path', type=str, default='../dataset/train/', help='path to training images')
+    parser.add_argument('--valid_path', type=str, default='../dataset/valid/', help='path to validation images')
+    parser.add_argument('--test_path', type=str, default='../dataset/test/', help='path to test images')
     parser.add_argument('--result_path', type=str, default='../results/', help='path to save results')
     parser.add_argument('--cuda_idx', type=int, default=1, help='if cuda available = 1 otherwise = 0')
     config = parser.parse_args()

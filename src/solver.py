@@ -15,6 +15,7 @@ from loss import *
 import csv
 import torch
 
+
 class Solver(object):
     def __init__(self, config, train_loader, valid_loader, test_loader):
         # Initialize data loader
@@ -31,7 +32,7 @@ class Solver(object):
         self.output_ch = config.output_ch
         # initialize the loss function
         self.criterion = FocalTverskyLoss()
-        self.loss_name = self.criterion._getname()
+        self.loss_name = self.criterion._get_name()
         # initialize the augmentation probability
         self.augmentation_prob = config.augmentation_prob
         # initialize hyper-parameters of the optimization scheme
@@ -53,9 +54,8 @@ class Solver(object):
         self.number_layers_freeze = config.number_layers_freeze
         # initialize the path to save the network
         self.net_path = None
-        
-        self.build_model()
 
+        self.build_model()
 
     def build_model(self):
         self.net = TernausNet16(pretrained=self.pretrained)
@@ -64,9 +64,9 @@ class Solver(object):
         self.net.to(self.device)
 
         if self.number_layers_freeze != 0:
-            layer_names = ['conv'+str(i) for i in range(1,self.number_layers_freeze+1)]
+            layer_names = ['conv' + str(i) for i in range(1, self.number_layers_freeze + 1)]
             for layer_name in layer_names:
-                for param in getattr(self.net,layer_name).parameters():
+                for param in getattr(self.net, layer_name).parameters():
                     param.requires_grad = False
 
     def print_network(self):
@@ -89,13 +89,17 @@ class Solver(object):
         self.print_network()
         # ====================================== Training =============================================================#
         lowest_valid_loss = 1e5  # initialize the lowest validation loss.
-        scheduler = optim.lr_scheduler.StepLR(self.optimizer, step_size=20, gamma=0.5)  # decay learning rate every 100
+        # scheduler = optim.lr_scheduler.StepLR(self.optimizer, step_size=20, gamma=0.5)  # decay learning rate every 100
+        scheduler = torch.optim.lr_scheduler.CyclicLR(self.optimizer, base_lr=self.lr,
+                                                      max_lr=0.001, step_size_up=5, cycle_momentum=False,
+                                                      mode="triangular2")
+
         # epochs by a factor of 0.5
         print('Start learning ...')
         # main loop through the training data
         for epoch in range(self.num_epochs):
             current_lr = [group['lr'] for group in self.optimizer.param_groups]
-            print('Epoch [%d/%d], lr:%f' % (epoch, self.num_epochs-1, current_lr[0]))
+            print('Epoch [%d/%d], lr:%f' % (epoch, self.num_epochs - 1, current_lr[0]))
             self.net.train(True)
 
             epoch_train_loss = 0  # initialize the epoch training loss
@@ -109,21 +113,19 @@ class Solver(object):
             for i, (images, GT) in enumerate(self.train_loader):
                 images = images.to(self.device)
                 GT = GT.to(self.device)  # GT : Ground Truth
-                GT_flat = GT.view(GT.size(0), -1)
-            
+
                 SR = self.net(images)  # SR : Segmentation Result
                 SR_probs = torch.sigmoid(SR)  # segmentation results as probabilities
-                SR_flat = SR_probs.view(SR_probs.size(0), -1)  # flatten the results
-                loss = self.criterion(SR_flat, GT_flat)  # compute loss
+                loss = self.criterion(SR_probs, GT)  # compute loss
                 epoch_train_loss += loss.item()  # accumulate the loss in the epoch
                 # compute metrics for each batch and accumulate them
-                acc += get_accuracy(SR_probs, GT)
-                SE += get_sensitivity(SR_probs, GT)
-                SP += get_specificity(SR_probs, GT)
-                PC += get_precision(SR_probs, GT)
-                JS += get_JS(SR_probs, GT)
-                DC += get_DC(SR_probs, GT)
-                length += 1
+                acc += get_accuracy(SR_probs, GT).sum()
+                SE += get_sensitivity(SR_probs, GT).sum()
+                SP += get_specificity(SR_probs, GT).sum()
+                PC += get_precision(SR_probs, GT).sum()
+                JS += get_JS(SR_probs, GT).sum()
+                DC += get_DC(SR_probs, GT).sum()
+                length += images.shape[0]
 
                 # backprop + Update the parameters
                 self.reset_grad()
@@ -146,7 +148,7 @@ class Solver(object):
             # ===================================== Validation ====================================================#
             self.net.train(False)  # set the training to false
             self.net.eval()  # set the module in evaluation mode.
-            
+
             epoch_valid_loss = 0  # initialize the epoch validation loss
             acc = 0.  # initialize accuracy
             SE = 0.  # initialize sensitivity (Recall)
@@ -159,21 +161,19 @@ class Solver(object):
                 for i, (images, GT) in enumerate(self.valid_loader):
                     images = images.to(self.device)
                     GT = GT.to(self.device)  # GT : Ground Truth
-                    GT_flat = GT.view(GT.size(0), -1)
                     SR = self.net(images)  # SR : Segmentation Result
                     SR_probs = torch.sigmoid(SR)  # segmentation results as probabilities
-                    SR_flat = SR_probs.view(SR_probs.size(0), -1)  # flatten the results
-                    loss = self.criterion(SR_flat, GT_flat) # compute loss
+                    loss = self.criterion(SR_probs, GT)  # compute loss
                     epoch_valid_loss += loss.item()  # accumulate the loss in the epoch
 
                     # compute metrics for each batch and accumulate them
-                    acc += get_accuracy(SR_probs, GT)
-                    SE += get_sensitivity(SR_probs, GT)
-                    SP += get_specificity(SR_probs, GT)
-                    PC += get_precision(SR_probs, GT)
-                    JS += get_JS(SR_probs, GT)
-                    DC += get_DC(SR_probs, GT)
-                    length += 1
+                    acc += get_accuracy(SR_probs, GT).sum()
+                    SE += get_sensitivity(SR_probs, GT).sum()
+                    SP += get_specificity(SR_probs, GT).sum()
+                    PC += get_precision(SR_probs, GT).sum()
+                    JS += get_JS(SR_probs, GT).sum()
+                    DC += get_DC(SR_probs, GT).sum()
+                    length += images.shape[0]
 
             # compute average metrics for validation data
             valid_acc = acc / length
@@ -198,21 +198,24 @@ class Solver(object):
             print('----------------------------------------------------------------------------------------------')
             if epoch == 0:
                 f = open(os.path.join(self.result_path, '%s-%s-%d-%d-%d-%d-%d-%d-%.6f-%.2f-%.4f-%.10f-%.2f-%d.csv' % (
-                        self.model_type, self.loss_name, self.image_size, self.img_ch, self.output_ch,
-                        self.pretrained, self.num_epochs, self.batch_size, self.lr, self.beta1, self.beta2,
-                        self.weight_decay, self.augmentation_prob, self.number_layers_freeze)), 'w', encoding='utf-8', newline='')
+                    self.model_type, self.loss_name, self.image_size, self.img_ch, self.output_ch,
+                    self.pretrained, self.num_epochs, self.batch_size, self.lr, self.beta1, self.beta2,
+                    self.weight_decay, self.augmentation_prob, self.number_layers_freeze)), 'w', encoding='utf-8',
+                         newline='')
                 wr = csv.writer(f)
                 wr.writerow(['Architecture', 'epoch', 'train_loss', 'valid_loss', 'train_acc', 'valid_acc', 'train_SE',
                              'valid_SE', 'train_SP', 'valid_SP', 'train_PC', 'valid_PC',
                              'train_JS', 'valid_JS', 'train_DC', 'valid_DC', 'lr',
-                             'best_epoch', 'num_epochs','batch_size' ,'augmentation_prob','pretrained', 'weight_decay',
+                             'best_epoch', 'num_epochs', 'batch_size', 'augmentation_prob', 'pretrained',
+                             'weight_decay',
                              'number_layers_freeze'])
                 f.close()
             f = open(os.path.join(self.result_path, '%s-%s-%d-%d-%d-%d-%d-%d-%.6f-%.2f-%.4f-%.10f-%.2f-%d.csv' % (
-                    self.model_type, self.loss_name, self.image_size, self.img_ch, self.output_ch,
-                    self.pretrained, self.num_epochs, self.batch_size, self.lr, self.beta1, self.beta2,
-                    self.weight_decay, self.augmentation_prob, self.number_layers_freeze)), 'a', encoding='utf-8', newline='')
-                
+                self.model_type, self.loss_name, self.image_size, self.img_ch, self.output_ch,
+                self.pretrained, self.num_epochs, self.batch_size, self.lr, self.beta1, self.beta2,
+                self.weight_decay, self.augmentation_prob, self.number_layers_freeze)), 'a', encoding='utf-8',
+                     newline='')
+
             wr = csv.writer(f)
             wr.writerow(
                 [self.model_type, epoch, train_loss, valid_loss, train_acc, valid_acc, train_SE, valid_SE, train_SP,
@@ -241,23 +244,19 @@ class Solver(object):
             for i, (images, GT) in enumerate(self.test_loader):
                 images = images.to(self.device)
                 GT = GT.to(self.device)  # GT : Ground Truth
-                GT_flat = GT.view(GT.size(0), -1)
-
                 SR = self.net(images)  # SR : Segmentation Result
                 SR_probs = torch.sigmoid(SR)  # segmentation results as probabilities
-                SR_flat = SR_probs.view(SR_probs.size(0), -1)  # flatten the results
-                loss = self.criterion(SR_flat, GT_flat)  # compute loss
+                loss = self.criterion(SR_probs, GT)  # compute loss
                 epoch_test_loss += loss.item()  # accumulate the loss in the epoch
-                    
 
                 # compute metrics for each batch and accumulate them
-                acc += get_accuracy(SR_probs, GT)
-                SE += get_sensitivity(SR_probs, GT)
-                SP += get_specificity(SR_probs, GT)
-                PC += get_precision(SR_probs, GT)
-                JS += get_JS(SR_probs, GT)
-                DC += get_DC(SR_probs, GT)
-                length += 1
+                acc += get_accuracy(SR_probs, GT).sum()
+                SE += get_sensitivity(SR_probs, GT).sum()
+                SP += get_specificity(SR_probs, GT).sum()
+                PC += get_precision(SR_probs, GT).sum()
+                JS += get_JS(SR_probs, GT).sum()
+                DC += get_DC(SR_probs, GT).sum()
+                length += images.shape[0]
 
         # compute average metrics for test data
         test_acc = acc / length
@@ -271,7 +270,7 @@ class Solver(object):
             '[Test] Loss: %.4f, Acc: %.4f, SE: %.4f, SP: %.4f, PC: %.4f, JS: %.4f, DC: %.4f' % (
                 test_loss, test_acc, test_SE, test_SP, test_PC, test_JS, test_DC))
         print('----------------------------------------------------------------------------------------------')
-        
+
         f = open(os.path.join(self.result_path, '%s-%s-%d-%d-%d-%d-%d-%d-%.6f-%.2f-%.4f-%.10f-%.2f-%d.csv' % (
             self.model_type, self.loss_name, self.image_size, self.img_ch, self.output_ch,
             self.pretrained, self.num_epochs, self.batch_size, self.lr, self.beta1, self.beta2,

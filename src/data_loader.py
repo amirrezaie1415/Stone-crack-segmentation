@@ -28,7 +28,6 @@ class ImageFolder(data.Dataset):
         self.image_size = image_size
         self.mode = mode
         self.augmentation_prob = augmentation_prob
-        print("image count in {} path :{}".format(self.mode, len(self.image_paths)))
 
     def __getitem__(self, index):
         """Read, pre-process and return batch of images and ground truth files."""
@@ -37,7 +36,7 @@ class ImageFolder(data.Dataset):
         if self.mode in ['train', 'valid']:
             gt_path = self.GT_paths + filename + '_mask.png'
             gt = Image.open(gt_path)
-        image = Image.open(image_path).convert('RGB')
+        image = skimage.io.imread(image_path)
         image = (image / image.max()) * 255
         image = np.uint8(image)
         image = Image.fromarray(image)

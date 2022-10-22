@@ -119,8 +119,8 @@ os.makedirs(test_masks, exist_ok=True)
 path_to_cores = '/home/swissinspect/Projects/malek_crack_detection/dataset/treated'
 
 train_cores = ['Core0', 'Core3']
-valid_cores = ['Core1']
-test_cores = ['Core2']
+valid_cores = ['Core2']
+test_cores = ['Core1']
 
 for core in train_cores:
     imgs = glob.glob(os.path.join(path_to_cores, core, 'images', 'patches_256', '*.png'))

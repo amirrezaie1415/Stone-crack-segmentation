@@ -22,11 +22,11 @@ def zero_pad(image, desired_size): # imgae : RGB
     newImgSize_x = image.shape[1] + desired_size - remainder_x
 
     if image.ndim == 3:
-        new_im = np.zeros((newImgSize_y, newImgSize_x, 3), dtype = "uint8")
+        new_im = np.zeros((newImgSize_y, newImgSize_x, 3), dtype=str(image.dtype))
         new_im[0:image.shape[0], 0:image.shape[1], :] = image[:,:,:]
         return new_im
     if image.ndim == 2:
-        new_im = np.zeros((newImgSize_y, newImgSize_x), dtype = "uint8")
+        new_im = np.zeros((newImgSize_y, newImgSize_x), dtype=str(image.dtype))
         new_im[0:image.shape[0], 0:image.shape[1]] = image[:,:]
         return new_im 
 

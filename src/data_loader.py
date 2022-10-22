@@ -14,7 +14,8 @@ from torch.utils import data
 from torchvision import transforms as T
 from torchvision.transforms import functional as F
 from PIL import Image
-
+import skimage.io
+import numpy as np
 
 class ImageFolder(data.Dataset):
     def __init__(self, root, image_size=256, mode='train', augmentation_prob=0.5, pretrained=False):
@@ -37,6 +38,10 @@ class ImageFolder(data.Dataset):
             gt_path = self.GT_paths + filename + '_mask.png'
             gt = Image.open(gt_path)
         image = Image.open(image_path).convert('RGB')
+        image = (image / image.max()) * 255
+        image = np.uint8(image)
+        image = Image.fromarray(image)
+        image = image.convert('RGB')
 
         transform = []  # initialize the list of transformations
         if self.mode == 'train':

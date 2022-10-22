@@ -91,7 +91,7 @@ class Solver(object):
         lowest_valid_loss = 1e5  # initialize the lowest validation loss.
         # scheduler = optim.lr_scheduler.StepLR(self.optimizer, step_size=20, gamma=0.5)  # decay learning rate every 100
         scheduler = torch.optim.lr_scheduler.CyclicLR(self.optimizer, base_lr=self.lr,
-                                                      max_lr=0.001, step_size_up=5, cycle_momentum=False,
+                                                      max_lr=0.0005, step_size_up=5, cycle_momentum=False,
                                                       mode="triangular2")
 
         # epochs by a factor of 0.5

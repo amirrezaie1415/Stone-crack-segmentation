@@ -86,7 +86,7 @@ if __name__ == '__main__':
     parser.add_argument('--num_epochs', type=int, default=100, help='number epochs for training')
     parser.add_argument('--batch_size', type=int, default=8)
     parser.add_argument('--num_workers', type=int, default=0)
-    parser.add_argument('--lr', type=float, default=0.00005, help='learning rate')
+    parser.add_argument('--lr', type=float, default=0.0001, help='learning rate')
     parser.add_argument('--beta1', type=float, default=0.9, help=' momentum1 in the Adam optimizer')
     parser.add_argument('--beta2', type=float, default=0.999, help='momentum2 in the Adam optimizer')
     parser.add_argument('--weight_decay', type=float, default=0.0, help='weight decay')

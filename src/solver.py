@@ -110,6 +110,7 @@ class Solver(object):
             JS = 0.  # initialize Jaccard Similarity
             DC = 0.  # initialize dice Coefficient
             length = 0  # counter
+            length_2 = 0
             for i, (images, GT) in enumerate(self.train_loader):
                 images = images.to(self.device)
                 GT = GT.to(self.device)  # GT : Ground Truth
@@ -124,9 +125,11 @@ class Solver(object):
                 SE += get_sensitivity(SR_probs, GT).sum()
                 SP += get_specificity(SR_probs, GT).sum()
                 PC += get_precision(SR_probs, GT).sum()
+                print(f"index:{length_2} PC:{get_precision(SR_probs, GT).sum()}")
                 JS += get_JS(SR_probs, GT).sum()
                 DC += get_DC(SR_probs, GT).sum()
                 length += images.shape[0]
+                length_2 += 1
 
                 # backprop + Update the parameters
                 self.reset_grad()

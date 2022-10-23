@@ -29,7 +29,7 @@ def get_accuracy(SR, GT, threshold=0.5):
     return batch_acc.squeeze(1)
 
 
-def get_sensitivity(SR, GT, threshold=0.5):
+def get_sensitivity(SR, GT, threshold=0.5, smooth=1e-6):
     # """
     # Compute the sensitivity (recall).
     # INPUT:
@@ -46,11 +46,11 @@ def get_sensitivity(SR, GT, threshold=0.5):
     # FN : False Negative
     TP = (((SR == 1).float() + (GT == 1).float()) == 2).float()
     FN = (((SR == 0).float() + (GT == 1).float()) == 2).float()
-    SE_batch = TP.sum(axis=[2, 3]) / (TP + FN).sum(axis=[2, 3])
+    SE_batch = TP.sum(axis=[2, 3]) / ((TP + FN).sum(axis=[2, 3]) + smooth)
     return SE_batch.squeeze(1)
 
 
-def get_specificity(SR, GT, threshold=0.5):
+def get_specificity(SR, GT, threshold=0.5, smooth=1e-6):
     """
     Compute the specificity.
     INPUT:
@@ -67,11 +67,11 @@ def get_specificity(SR, GT, threshold=0.5):
     # FP : False Positive
     TN = (((SR == 0).float() + (GT == 0).float()) == 2).float()
     FP = (((SR == 1).float() + (GT == 0).float()) == 2).float()
-    SP_batch = TN.sum(axis=[2, 3]) / (TN + FP).sum(axis=[2, 3])
+    SP_batch = TN.sum(axis=[2, 3]) / ((TN + FP).sum(axis=[2, 3]) + smooth)
     return SP_batch.squeeze(1)
 
 
-def get_precision(SR, GT, threshold=0.5):
+def get_precision(SR, GT, threshold=0.5, smooth=1e-6):
     """
     Compute the precision.
     INPUT:
@@ -88,7 +88,7 @@ def get_precision(SR, GT, threshold=0.5):
     # FP : False Positive
     TP = (((SR == 1).float() + (GT == 1).float()) == 2).float()
     FP = (((SR == 1).float() + (GT == 0).float()) == 2).float()
-    PC_batch = TP.sum(axis=[2, 3]) / (TP + FP).sum(axis=[2, 3])
+    PC_batch = TP.sum(axis=[2, 3]) / ((TP + FP).sum(axis=[2, 3]) + smooth)
     return PC_batch.squeeze(1)
 
 

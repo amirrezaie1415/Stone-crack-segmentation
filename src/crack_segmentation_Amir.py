@@ -26,18 +26,19 @@ import glob
 import pathlib
 import torchvision.transforms as T
 import warnings
+import shutil
 warnings.filterwarnings("ignore")
 
 #Testing
-data_folder = 'test/'
-#images_path = data_folder+'images'
-images_path = "../dataset/test"
+images_path = "../dataset/test_full_image"
 # load model
-model_name = 'TernausNet16-DiceLoss-256-1-1-1-100-1-0.000200-0.90-0.9990-0.0000000000-0.50-0.pkl'
+model_name = 'TernausNet16-FocalTverskyLoss-256-1-1-1-50-32-0.000100-0.90-0.9990-0.0000000000-0.50-0.pkl'
 #model_name = 'dice_or_lb_full_weights_100_1e-05.pt'
 threshold = 0.5
 model_path = os.path.join('../models', model_name)
-result_path = images_path
+result_path = '../predictions'
+shutil.rmtree(result_path)
+os.mkdir(result_path)
 
 model = TernausNet16()
 #model = UNet16()
@@ -68,6 +69,9 @@ for ind, file in enumerate(image_names):
 
 for image_name in tqdm(image_names):
     image_file = skimage.io.imread(os.path.join(images_path, image_name))
+    image_file = (image_file / image_file.max()) * 255
+    image_file = np.uint8(image_file)
+
     org_im_h = image_file.shape[0]
     org_im_w = image_file.shape[1]
     padded_image = zero_pad(image_file, desired_size)

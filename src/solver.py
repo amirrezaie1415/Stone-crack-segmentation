@@ -53,7 +53,7 @@ class Solver(object):
         self.pretrained = bool(config.pretrained)
         self.number_layers_freeze = config.number_layers_freeze
         # initialize the path to save the network
-        self.net_path = None
+        # self.net_path = None
 
         self.build_model()
 
@@ -81,10 +81,10 @@ class Solver(object):
     def train(self):
         """Function to train the network"""
         # path to save the best model
-        self.net_path = os.path.join(self.model_path, '%s-%s-%d-%d-%d-%d-%d-%d-%.6f-%.2f-%.4f-%.10f-%.2f-%d.pkl' % (
-            self.model_type, self.loss_name, self.image_size, self.img_ch, self.output_ch,
-            self.pretrained, self.num_epochs, self.batch_size, self.lr, self.beta1, self.beta2,
-            self.weight_decay, self.augmentation_prob, self.number_layers_freeze))
+        # self.net_path = os.path.join(self.model_path, '%s-%s-%d-%d-%d-%d-%d-%d-%.6f-%.2f-%.4f-%.10f-%.2f-%d.pkl' % (
+        #     self.model_type, self.loss_name, self.image_size, self.img_ch, self.output_ch,
+        #     self.pretrained, self.num_epochs, self.batch_size, self.lr, self.beta1, self.beta2,
+        #     self.weight_decay, self.augmentation_prob, self.number_layers_freeze))
         # print the model information
         self.print_network()
         # ====================================== Training =============================================================#
@@ -116,8 +116,9 @@ class Solver(object):
 
                 SR = self.net(images)  # SR : Segmentation Result
                 SR_probs = torch.sigmoid(SR)  # segmentation results as probabilities
-                loss = self.criterion(SR_probs, GT)  # compute loss
-                epoch_train_loss += loss.item()  # accumulate the loss in the epoch
+                loss_batch = self.criterion(SR_probs, GT)  # compute loss
+                loss = loss_batch.mean()
+                epoch_train_loss += loss_batch.sum().item()  # accumulate the loss in the epoch
                 # compute metrics for each batch and accumulate them
                 acc += get_accuracy(SR_probs, GT).sum()
                 SE += get_sensitivity(SR_probs, GT).sum()
@@ -163,8 +164,8 @@ class Solver(object):
                     GT = GT.to(self.device)  # GT : Ground Truth
                     SR = self.net(images)  # SR : Segmentation Result
                     SR_probs = torch.sigmoid(SR)  # segmentation results as probabilities
-                    loss = self.criterion(SR_probs, GT)  # compute loss
-                    epoch_valid_loss += loss.item()  # accumulate the loss in the epoch
+                    loss_batch = self.criterion(SR_probs, GT)  # compute loss
+                    epoch_valid_loss += loss_batch.sum().item()  # accumulate the loss in the epoch
 
                     # compute metrics for each batch and accumulate them
                     acc += get_accuracy(SR_probs, GT).sum()
@@ -194,7 +195,13 @@ class Solver(object):
                 best_epoch = epoch
                 best_net = self.net.state_dict()
                 print('Best %s model loss : %.4f' % (self.model_type, lowest_valid_loss))
-                torch.save(best_net, self.net_path)
+                checkpoint_name = 'checkpoint_best.pth'
+                checkpoint = {
+                    'nb_epochs_finished': epoch + 1,
+                    'model_state': best_net,
+                    'optimizer_state': self.optimizer.state_dict()
+                }
+                torch.save(checkpoint, os.path.join(self.model_path, checkpoint_name))
             print('----------------------------------------------------------------------------------------------')
             if epoch == 0:
                 f = open(os.path.join(self.result_path, '%s-%s-%d-%d-%d-%d-%d-%d-%.6f-%.2f-%.4f-%.10f-%.2f-%d.csv' % (
@@ -228,7 +235,9 @@ class Solver(object):
         """Function to obtain the results on test data"""
         # load the trained model
         model = self.net
-        model.load_state_dict(torch.load(self.net_path))
+        checkpoint = torch.load(os.path.join(self.model_path, "checkpoint_best.pth"))
+        model.load_state_dict(checkpoint['model_state'])
+        #model.load_state_dict(torch.load(self.net_path))
         model.train(False)
         model.eval()
 
@@ -246,8 +255,9 @@ class Solver(object):
                 GT = GT.to(self.device)  # GT : Ground Truth
                 SR = self.net(images)  # SR : Segmentation Result
                 SR_probs = torch.sigmoid(SR)  # segmentation results as probabilities
-                loss = self.criterion(SR_probs, GT)  # compute loss
-                epoch_test_loss += loss.item()  # accumulate the loss in the epoch
+                loss_batch = self.criterion(SR_probs, GT)  # compute loss
+                # epoch_test_loss += loss.item()  # accumulate the loss in the epoch
+                epoch_test_loss += loss_batch.sum().item()  # accumulate the loss in the epoch
 
                 # compute metrics for each batch and accumulate them
                 acc += get_accuracy(SR_probs, GT).sum()

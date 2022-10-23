@@ -13,18 +13,18 @@ class FocalTverskyLoss(nn.Module):
 
     def forward(self, inputs, targets, smooth=1, alpha=0.4, beta=0.6, gamma=2):
         # comment out if your model contains a sigmoid or equivalent activation layer
-        inputs = F.sigmoid(inputs)
+        #inputs = F.sigmoid(inputs)
 
         # flatten label and prediction tensors
-        inputs = inputs.view(-1)
-        targets = targets.view(-1)
+       # inputs = inputs.view(-1)
+       # targets = targets.view(-1)
 
         # True Positives, False Positives & False Negatives
-        TP = (inputs * targets).sum()
-        FP = ((1 - targets) * inputs).sum()
-        FN = (targets * (1 - inputs)).sum()
+        TP = (inputs * targets).sum(axis=[2, 3])
+        FP = ((1 - targets) * inputs).sum(axis=[2, 3])
+        FN = (targets * (1 - inputs)).sum(axis=[2, 3])
 
         Tversky = (TP + smooth) / (TP + alpha * FP + beta * FN + smooth)
-        FocalTversky = (1 - Tversky) ** gamma
+        FocalTversky_batch = (1 - Tversky) ** gamma
 
-        return FocalTversky
+        return FocalTversky_batch.squeeze(1)

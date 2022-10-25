@@ -32,23 +32,26 @@ warnings.filterwarnings("ignore")
 #Testing
 images_path = "../dataset/test_full_image"
 # load model
-model_name = 'TernausNet16-FocalTverskyLoss-256-1-1-1-50-32-0.000100-0.90-0.9990-0.0000000000-0.50-0.pkl'
+model_name = 'checkpoint_best.pth'
 #model_name = 'dice_or_lb_full_weights_100_1e-05.pt'
 threshold = 0.5
 model_path = os.path.join('../models', model_name)
 result_path = '../predictions'
 shutil.rmtree(result_path)
-os.mkdir(result_path)
+os.makedirs(result_path)
+
+
 
 model = TernausNet16()
 #model = UNet16()
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
-model.load_state_dict(torch.load(model_path, map_location="cuda"))
+checkpoint = torch.load(model_path)
+model.load_state_dict(checkpoint['model_state'])
 model.to(device)
 model.train(False)
 model.eval()
 
-desired_size = 256
+desired_size = 512
 transform = []
 transform.append(T.Resize((desired_size, desired_size)))
 transform.append(T.ToTensor())

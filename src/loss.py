@@ -11,7 +11,7 @@ class FocalTverskyLoss(nn.Module):
     def __init__(self, weight=None, size_average=True):
         super(FocalTverskyLoss, self).__init__()
 
-    def forward(self, inputs, targets, smooth=1, alpha=0.4, beta=0.6, gamma=2):
+    def forward(self, inputs, targets, smooth=1, alpha=0.5, beta=0.5, gamma=3):
         # comment out if your model contains a sigmoid or equivalent activation layer
         #inputs = F.sigmoid(inputs)
 

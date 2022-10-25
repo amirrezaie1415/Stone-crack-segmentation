@@ -2,5 +2,6 @@
 models/
 results/
 dataset/
+predictions/
 .vscode/
 launch.json

@@ -98,7 +98,7 @@ if __name__ == '__main__':
     parser.add_argument('--train_path', type=str, default='../dataset/train/', help='path to training images')
     parser.add_argument('--valid_path', type=str, default='../dataset/valid/', help='path to validation images')
     parser.add_argument('--test_path', type=str, default='../dataset/test/', help='path to test images')
-    parser.add_argument('--result_path', type=str, default='../results/', help='path to save results')
+    parser.add_argument('--logs_path', type=str, default='../logs/', help='path to save results')
     parser.add_argument('--cuda_idx', type=int, default=1, help='if cuda available = 1 otherwise = 0')
     config = parser.parse_args()
     main(config)

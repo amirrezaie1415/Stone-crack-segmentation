@@ -46,7 +46,7 @@ class Solver(object):
 
         # initialize path of the model to be saved
         self.model_path = config.model_path
-        self.result_path = config.result_path
+        self.logs_path = config.logs_path
         # using cpu or gpu
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.model_type = config.model_type
@@ -204,7 +204,7 @@ class Solver(object):
                 torch.save(checkpoint, os.path.join(self.model_path, checkpoint_name))
             print('----------------------------------------------------------------------------------------------')
             if epoch == 0:
-                f = open(os.path.join(self.result_path, '%s-%s-%d-%d-%d-%d-%d-%d-%.6f-%.2f-%.4f-%.10f-%.2f-%d.csv' % (
+                f = open(os.path.join(self.logs_path, '%s-%s-%d-%d-%d-%d-%d-%d-%.6f-%.2f-%.4f-%.10f-%.2f-%d.csv' % (
                     self.model_type, self.loss_name, self.image_size, self.img_ch, self.output_ch,
                     self.pretrained, self.num_epochs, self.batch_size, self.lr, self.beta1, self.beta2,
                     self.weight_decay, self.augmentation_prob, self.number_layers_freeze)), 'w', encoding='utf-8',
@@ -217,7 +217,7 @@ class Solver(object):
                              'weight_decay',
                              'number_layers_freeze'])
                 f.close()
-            f = open(os.path.join(self.result_path, '%s-%s-%d-%d-%d-%d-%d-%d-%.6f-%.2f-%.4f-%.10f-%.2f-%d.csv' % (
+            f = open(os.path.join(self.logs_path, '%s-%s-%d-%d-%d-%d-%d-%d-%.6f-%.2f-%.4f-%.10f-%.2f-%d.csv' % (
                 self.model_type, self.loss_name, self.image_size, self.img_ch, self.output_ch,
                 self.pretrained, self.num_epochs, self.batch_size, self.lr, self.beta1, self.beta2,
                 self.weight_decay, self.augmentation_prob, self.number_layers_freeze)), 'a', encoding='utf-8',
@@ -281,7 +281,7 @@ class Solver(object):
                 test_loss, test_acc, test_SE, test_SP, test_PC, test_JS, test_DC))
         print('----------------------------------------------------------------------------------------------')
 
-        f = open(os.path.join(self.result_path, '%s-%s-%d-%d-%d-%d-%d-%d-%.6f-%.2f-%.4f-%.10f-%.2f-%d.csv' % (
+        f = open(os.path.join(self.logs_path, '%s-%s-%d-%d-%d-%d-%d-%d-%.6f-%.2f-%.4f-%.10f-%.2f-%d.csv' % (
             self.model_type, self.loss_name, self.image_size, self.img_ch, self.output_ch,
             self.pretrained, self.num_epochs, self.batch_size, self.lr, self.beta1, self.beta2,
             self.weight_decay, self.augmentation_prob, self.number_layers_freeze)), 'a', encoding='utf-8', newline='')

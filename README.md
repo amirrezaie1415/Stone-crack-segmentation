@@ -1,11 +1,6 @@
-# Deep Crack Segmentation
+# Crack Segmentation in Stone
 
-This repo contains the source codes for segmenting cracks on DIC images presented in [Rezaie et al.](https://doi.org/10.1016/j.conbuildmat.2020.120474)
-
-Link to the publication: [click here](https://doi.org/10.1016/j.conbuildmat.2020.120474)
-
-Link to the crack dataset: [click here](https://doi.org/10.5281/zenodo.4307686)
-
+This repo includes the codes for segmentation of crack pixels in scanned stone samples. 
 
 # How to use it?
 
@@ -29,32 +24,42 @@ conda env create -f environment.yml
 ```
 
 ```bash
-conda activate deepcrack
+conda activate stone_crack_detection
 ```
 
-## 4. Download the crack dataset
+## 4. Create the dataset directory
 
-To download and create the dataset directory containing train/validation/test images run the following python script:
 
-```bash
-    python download_dataset.py
-```
-
-This will create a new directory called ```dataset```. 
+Stone-crack-segmentation
+└───dataset
+    └───train
+    └───train_GT
+    └───test
+    └───test_GT
+    └───valid
+    └───valid_GT
+└───models
+└───logs
+└───src
 
 
 ## 5. Train a model
 
 To train a deep model you can run the following command:
 ```bash
-    python run.py --model_type=TernausNet16 --lr=2e-4 --weight_decay=0 --num_epochs=100 --pretrained=1  --batch_size=1
+    python run.py --model_type=TernausNet16 --lr=1e-4 --weight_decay=0 --num_epochs=50 --pretrained=1  --batch_size=32
 ```
+
+## 6. Inference
+
+TO DO
 
 
 # Citation
 
-If you find this implementation useful, please cite us as:
+The src codes in this repo are modified versions of the codes in the [Deep DIC Crack](https://github.com/amirrezaie1415/Deep-DIC-Crack) repo. 
 
+If you find this implementation useful, please cite us as:
 ```
 @article{REZAIE2020120474,
 title = {Comparison of crack segmentation using digital image correlation measurements and deep learning},

@@ -1,4 +1,4 @@
-name: topo_crack_detection
+name: stone_crack_detection
 channels:
   - pytorch
   - conda-forge

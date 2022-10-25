@@ -29,7 +29,7 @@ conda activate stone_crack_detection
 
 ## 4. Create the dataset directory
 
-
+```
 Stone-crack-segmentation
 └───dataset
     └───train
@@ -41,7 +41,7 @@ Stone-crack-segmentation
 └───models
 └───logs
 └───src
-
+```
 
 ## 5. Train a model
 
